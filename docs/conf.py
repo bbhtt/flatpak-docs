@@ -50,8 +50,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Flatpak'
-copyright = '2017-2024, Flatpak Team. Licensed under Creative Commons Attribution 4.0 International License.'
-author = 'Flatpak Team'
+copyright = '2017-2024, Flatpak Team, bbhtt. Licensed under Creative Commons Attribution 4.0 International License.'
+author = 'Flatpak Team, bbhtt'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
