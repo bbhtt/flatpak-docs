@@ -1,0 +1,46 @@
+name: Update Flatpak and Flatpak Builder docs
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch: {}
+
+jobs:
+  archive:
+    name: Update Flatpak and Flatpak Builder docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo add-apt-repository ppa:flatpak/development
+          sudo apt update
+          sudo apt install -y flatpak flatpak-builder git libxml2-utils
+
+      - name: Move docs
+        run: |
+            old_flatpak_version="$(xmllint --html --xpath "//p[@class='releaseinfo']/text()" docs/flatpak-docs.html|sed "s/Version//g"|awk '{$1=$1};1')"
+            old_flatpak_builder_version="$(xmllint --html --xpath "//p[@class='releaseinfo']/text()" docs/flatpak-builder-docs.html|sed "s/Version//g"|awk '{$1=$1};1')"
+            cp -vf /usr/share/doc/flatpak/flatpak-docs.html docs/
+            cp -vf /usr/share/doc/flatpak-builder/flatpak-builder-docs.html docs/
+            new_flatpak_version="$(xmllint --html --xpath "//p[@class='releaseinfo']/text()" docs/flatpak-docs.html|sed "s/Version//g"|awk '{$1=$1};1')"
+            new_flatpak_builder_version="$(xmllint --html --xpath "//p[@class='releaseinfo']/text()" docs/flatpak-builder-docs.html|sed "s/Version//g"|awk '{$1=$1};1')"
+            appstreamcli vercmp "$new_flatpak_version" gt "$old_flatpak_version"
+            appstreamcli vercmp "$new_flatpak_builder_version" gt "$old_flatpak_builder_version"
+            echo "NEW_FLATPAK_VERSION=${new_flatpak_version}" "OLD_FLATPAK_VERSION=${old_flatpak_version}" "NEW_FLATPAK_BUILDER_VERSION=${new_flatpak_builder_version}" "OLD_FLATPAK_BUILDER_VERSION=${old_flatpak_builder_version}" >> $GITHUB_ENV
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            "(Automated) Update Flatpak and Flatpak Builder docs"
+
+            Update Flatpak docs from "$OLD_FLATPAK_VERSION" to "$NEW_FLATPAK_VERSION"
+            Update Flatpak Builder docs from "$OLD_FLATPAK_BUILDER_VERSION" to "$NEW_FLATPAK_BUILDER_VERSION"
+          title: "(Automated) Update Flatpak and Flatpak Builder docs"
+          body: |
+            Update Flatpak docs from "$OLD_FLATPAK_VERSION" to "$NEW_FLATPAK_VERSION"
+            Update Flatpak Builder docs from "$OLD_FLATPAK_BUILDER_VERSION" to "$NEW_FLATPAK_BUILDER_VERSION"
+          delete-branch: true
+          sign-commits: true
